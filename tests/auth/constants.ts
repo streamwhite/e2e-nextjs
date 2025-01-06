@@ -9,6 +9,10 @@ export const testIds = {
   existedUser: 'existed-user',
   signInError: 'sign-in-error',
   signOutError: 'sign-out-error',
+
+  sendEmailButton: 'send-email-button',
+
+  emailSentMessage: 'email-sent-message',
 };
 
 // Add any confidentials here
@@ -19,8 +23,8 @@ export const confidentials = {
     password: '123456',
   },
   signin: {
-    email: 't13@example.com',
-    password: 'password123',
+    email: 'streamwhite@hotmail.com',
+    password: '2vtLpME8qN6KgK',
     wrongPassword: 'password1234',
     wrongEmail: 'wrong@example.com',
   },
