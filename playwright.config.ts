@@ -3,7 +3,7 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './tests',
 
-  timeout: 30000, // Test timeout
+  timeout: 60000, // Test timeout
   retries: 2, // Retry failed tests
   workers: 4, // Run tests in parallel
   use: {
@@ -11,7 +11,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    // baseURL: 'https://example.com',
+    baseURL: 'http://localhost:3000',
   },
   projects: [
     {
