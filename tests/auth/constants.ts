@@ -21,5 +21,7 @@ export const confidentials = {
   signin: {
     email: 't13@example.com',
     password: 'password123',
+    wrongPassword: 'password1234',
+    wrongEmail: 'wrong@example.com',
   },
 };

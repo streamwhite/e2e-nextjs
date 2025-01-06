@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { confidentials, testIds } from './constants';
 
-const { email, password } = confidentials.signin;
+const { email, password, wrongEmail, wrongPassword } = confidentials.signin;
 
 test.describe('Sign In', () => {
   test.beforeEach(async ({ page }) => {
@@ -19,14 +19,8 @@ test.describe('Sign In', () => {
   });
 
   test('should show error for incorrect credentials', async ({ page }) => {
-    await page.fill(
-      `[data-testid="${testIds.emailInput}"]`,
-      'wrong@example.com'
-    );
-    await page.fill(
-      `[data-testid="${testIds.passwordInput}"]`,
-      'wrongpassword'
-    );
+    await page.fill(`[data-testid="${testIds.emailInput}"]`, wrongEmail);
+    await page.fill(`[data-testid="${testIds.passwordInput}"]`, wrongPassword);
     await page.click(`[data-testid="${testIds.signInButton}"]`);
     await page.waitForSelector(`[data-testid="${testIds.signInError}"]`);
     await expect(
