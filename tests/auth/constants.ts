@@ -13,6 +13,20 @@ export const testIds = {
   sendEmailButton: 'send-email-button',
 
   emailSentMessage: 'email-sent-message',
+  sendVerificationEmailButton: 'send-verification-email-button',
+
+  updateEmailButton: 'update-email-button',
+  verifyNewEmailButton: 'verify-new-email-button',
+  updateEmailInput: 'update-email-input',
+  currentPasswordInput: 'current-password-input',
+  currentEmailInput: 'current-email-input',
+  emailUpdatedMessage: 'email-updated-message',
+
+  updatePasswordButton: 'update-password-button', // New test ID
+  updatePasswordInput: 'update-password-input', // New test
+  passwordUpdatedMessage: 'password-updated-message', // New test ID
+  deleteUserButton: 'delete-user-button', // New test ID
+  userExistsMessage: 'user-exists-message', // New test ID
 };
 
 // Add any confidentials here
@@ -27,5 +41,9 @@ export const confidentials = {
     password: '2vtLpME8qN6KgK',
     wrongPassword: 'password1234',
     wrongEmail: 'wrong@example.com',
+  },
+  manage: {
+    newpassword: '2vtLpME8qN6KgK',
+    newemail: 'herwidget@outlook.com',
   },
 };

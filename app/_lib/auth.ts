@@ -8,4 +8,7 @@ const config = {
   authDomain: 'e2e-nextjs-1735983960697.firebaseapp.com',
   messagingSenderId: '404354506672',
 };
-export const auth = getAuth(config);
+
+const auth = getAuth(config);
+
+export { auth };
