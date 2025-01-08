@@ -1,5 +1,9 @@
 import { User, signOut } from 'firebase/auth';
-import { signInWithEmailAndPassword, watchAuth } from 'quick-fire';
+import {
+  sendSignInLinkToEmail,
+  signInWithEmailAndPassword,
+  watchAuth,
+} from 'quick-fire';
 import { useEffect, useState } from 'react';
 import { auth } from '../_lib/auth';
 
@@ -81,6 +85,22 @@ export default function SignInForm({
       >
         Sign Out
       </button>
+
+      <button
+        className='px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600'
+        onClick={() => {
+          const actionCodeSettings = {
+            url: `https://localhost:3000/signin-with-email-link?email=${email}`,
+            handleCodeInApp: true,
+          };
+
+          sendSignInLinkToEmail(email, actionCodeSettings, auth);
+        }}
+        data-testid='send-signin-link-button'
+      >
+        Send Email Link
+      </button>
+
       <div>
         {user && (
           <div>

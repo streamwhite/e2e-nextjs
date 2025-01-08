@@ -27,6 +27,9 @@ export const testIds = {
   passwordUpdatedMessage: 'password-updated-message', // New test ID
   deleteUserButton: 'delete-user-button', // New test ID
   userExistsMessage: 'user-exists-message', // New test ID
+
+  signinWithLinkUserEmail: 'signin-with-link-user-email',
+  sendSigninLinkButton: 'send-signin-link-button',
 };
 
 // Add any confidentials here
