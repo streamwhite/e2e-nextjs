@@ -30,6 +30,17 @@ export const testIds = {
 
   signinWithLinkUserEmail: 'signin-with-link-user-email',
   sendSigninLinkButton: 'send-signin-link-button',
+
+  socialSignedIn: 'social-signed-in',
+  googleSignin: 'google-signin',
+  appleSignin: 'apple-signin',
+  githubSignin: 'github-signin',
+  facebookSignin: 'facebook-signin',
+  twitterSignin: 'twitter-signin',
+  microsoftSignin: 'microsoft-signin',
+
+  mfaSignedIn: 'mfa-signed-in',
+  mfaSmsSignin: 'mfa-sms-signin',
 };
 
 // Add any confidentials here
