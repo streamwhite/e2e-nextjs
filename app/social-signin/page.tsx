@@ -1,11 +1,20 @@
 'use client';
-import { User } from 'firebase/auth';
-import { signInWithSocialProvider, watchAuth } from 'quick-fire';
-import { useEffect, useState } from 'react';
+import { MultiFactorResolver, User } from 'firebase/auth';
+import {
+  getMfaResolver,
+  sendMfaPhoneLoginCode,
+  signInWithSocialProvider,
+  verifyMfaCode,
+  watchAuth,
+} from 'quick-fire';
+import { useEffect, useRef, useState } from 'react';
 import { auth } from '../_lib/auth';
 
 export default function SignUp() {
   const [user, setUser] = useState<User | null>(null);
+  const [isCodeSent, setIsCodeSent] = useState(false);
+  const [mfaCode, setMfaCode] = useState('');
+  const currentResolver = useRef<MultiFactorResolver | null>(null);
 
   useEffect(() => {
     const unsubscribe = watchAuth((user) => {
@@ -18,25 +27,72 @@ export default function SignUp() {
     return () => unsubscribe();
   }, []);
 
+  const handleOtpCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMfaCode(e.target.value);
+  };
+
+  const verifyCode = () => {
+    if (currentResolver.current) {
+      verifyMfaCode({
+        verificationCode: mfaCode,
+        multiFactorResolver: currentResolver.current,
+        type: 'sms',
+      }).then((userCredential) => {
+        setUser(userCredential?.user as User);
+      });
+    }
+  };
+
+  const handleMfa = ({
+    types,
+    resolver,
+  }: {
+    types: string[];
+    resolver: MultiFactorResolver;
+  }) => {
+    currentResolver.current = resolver;
+    if (types.length === 1) {
+      // send code directly
+      if (types[0] === 'sms') {
+        sendMfaPhoneLoginCode({
+          resolver,
+          recaptchaContainerId: 'recaptcha',
+          auth,
+        }).then(() => {
+          setIsCodeSent(true);
+        });
+      }
+    } else if (types.length >= 2) {
+      // show options to user to select
+      // use same input
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithSocialProvider({ providerName: 'google', auth });
+      await signInWithSocialProvider({ providerName: 'google', auth }).catch(
+        (error) => {
+          const result = getMfaResolver(error, auth);
+          if (result && result.types.length >= 1) {
+            handleMfa(result);
+          }
+        }
+      );
     } catch (error) {
       console.error('Google sign-in error:', error);
     }
   };
 
-  /* const handleAppleSignIn = async () => {
-    try {
-      await signInWithSocialProvider({ providerName: 'apple', auth });
-    } catch (error) {
-      console.error('Apple sign-in error:', error);
-    }
-  }; */
-
   const handleGithubSignIn = async () => {
     try {
-      await signInWithSocialProvider({ providerName: 'github', auth });
+      await signInWithSocialProvider({ providerName: 'github', auth }).catch(
+        (error) => {
+          const result = getMfaResolver(error, auth);
+          if (result && result.types.length >= 1) {
+            handleMfa(result);
+          }
+        }
+      );
     } catch (error) {
       console.error('GitHub sign-in error:', error);
     }
@@ -59,20 +115,35 @@ export default function SignUp() {
       >
         Sign in with Google
       </button>
-      {/* <button
-        onClick={handleAppleSignIn}
-        className='px-4 py-2 text-white bg-black rounded hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-opacity-75'
-        data-testid='apple-signin'
-      >
-        Sign in with Apple
-      </button> */}
       <button
         onClick={handleGithubSignIn}
-        className='px-4 py-2 text-white bg-gray-800 rounded hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-opacity-75'
+        className='px-4 py-2 mb-2 text-white bg-gray-800 rounded hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75'
         data-testid='github-signin'
       >
         Sign in with GitHub
       </button>
+
+      {isCodeSent && (
+        <input
+          type='text'
+          placeholder='Enter OTP Code'
+          className='px-4 py-2 mb-2 border rounded-md'
+          value={mfaCode}
+          onChange={handleOtpCodeChange}
+          data-testid='otp-code-input'
+        />
+      )}
+      {isCodeSent && (
+        <button
+          onClick={verifyCode}
+          className='px-4 py-2 mb-2 text-white bg-yellow-500 rounded hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-75'
+          data-testid='verify-code-button'
+        >
+          Verify Code
+        </button>
+      )}
+
+      <div id='recaptcha'></div>
     </div>
   );
 }

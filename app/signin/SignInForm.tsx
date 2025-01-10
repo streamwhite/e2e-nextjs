@@ -1,10 +1,13 @@
-import { User, signOut } from 'firebase/auth';
+import { MultiFactorResolver, signOut, User } from 'firebase/auth';
 import {
+  getMfaResolver,
+  sendMfaPhoneLoginCode,
   sendSignInLinkToEmail,
   signInWithEmailAndPassword,
+  verifyMfaCode,
   watchAuth,
 } from 'quick-fire';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { auth } from '../_lib/auth';
 
 interface SignInFormProps {
@@ -22,6 +25,9 @@ export default function SignInForm({
 }: SignInFormProps) {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [isShowMfaCodeInput, setIsShowMfaCodeInput] = useState(false);
+  const [mfaCode, setMfaCode] = useState('');
+  const currentResolver = useRef<MultiFactorResolver | null>(null);
 
   useEffect(() => {
     const unsubscribe = watchAuth((user) => {
@@ -33,6 +39,31 @@ export default function SignInForm({
     }, auth);
     return () => unsubscribe();
   }, [setUser]);
+
+  const handleMfa = ({
+    types,
+    resolver,
+  }: {
+    types: string[];
+    resolver: MultiFactorResolver;
+  }) => {
+    currentResolver.current = resolver;
+    if (types.length === 1) {
+      // send code directly
+      if (types[0] === 'sms') {
+        sendMfaPhoneLoginCode({
+          resolver,
+          recaptchaContainerId: 'recaptcha',
+          auth,
+        }).then(() => {
+          setIsShowMfaCodeInput(true);
+        });
+      }
+    } else if (types.length >= 2) {
+      // show options to user to select
+      // use same input
+    }
+  };
 
   return (
     <div className='signin flex flex-col space-y-4'>
@@ -52,6 +83,19 @@ export default function SignInForm({
         className='px-4 py-2 border rounded-md'
         data-testid='password-input'
       />
+
+      {isShowMfaCodeInput && (
+        <input
+          type='text'
+          placeholder='Enter MFA Code'
+          className='px-4 py-2 border rounded-md'
+          data-testid='mfa-code-input'
+          value={mfaCode}
+          onChange={(e) => {
+            setMfaCode(e.target.value);
+          }}
+        />
+      )}
       <button
         className='px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600'
         onClick={() => {
@@ -60,6 +104,10 @@ export default function SignInForm({
               setError('User not found');
             } else {
               setError(error.message);
+              const result = getMfaResolver(error, auth);
+              if (result && result.types.length >= 1) {
+                handleMfa(result);
+              }
             }
           });
         }}
@@ -86,6 +134,24 @@ export default function SignInForm({
         Sign Out
       </button>
 
+      {isShowMfaCodeInput && (
+        <button
+          className='px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600'
+          onClick={() => {
+            verifyMfaCode({
+              verificationCode: mfaCode,
+              multiFactorResolver:
+                currentResolver.current as MultiFactorResolver,
+              type: 'sms',
+            }).then((userCredential) => {
+              setUser(userCredential?.user as User);
+            });
+          }}
+          data-testid='verify-mfa-code-button'
+        >
+          Verify MFA Code
+        </button>
+      )}
       <button
         className='px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600'
         onClick={() => {
@@ -122,6 +188,7 @@ export default function SignInForm({
           </div>
         )}
       </div>
+      <div id='recaptcha'></div>
     </div>
   );
 }

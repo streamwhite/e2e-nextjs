@@ -15,6 +15,7 @@ export default function SignUp() {
   const [isEnrollStarted, setIsEnrollStarted] = useState(false);
   const [mfaCode, setMfaCode] = useState('');
   const [isCodeSent, setIsCodeSent] = useState(false);
+  const [isEnrolled, setIsEnrolled] = useState(false);
 
   useEffect(() => {
     const unsubscribe = watchAuth((user) => {
@@ -34,9 +35,8 @@ export default function SignUp() {
   const verifyCode = () => {
     enrollMfaWithPhone({
       verificationCode: mfaCode,
-      auth,
       user: user!,
-    }).then(() => setIsCodeSent(true));
+    }).then(() => setIsEnrolled(true));
   };
 
   return (
@@ -87,7 +87,7 @@ export default function SignUp() {
                     recaptchaContainerId: 'recaptcha',
                     auth,
                     user,
-                  });
+                  }).then(() => setIsCodeSent(true));
                 }}
                 className='px-4 py-2 bg-green-500 text-white rounded mb-4'
                 data-testid='mfa-enroll'
@@ -101,10 +101,19 @@ export default function SignUp() {
               >
                 enroll user
               </button>
+              {isEnrolled && (
+                <p
+                  className='text-green-600 text-lg font-semibold'
+                  data-testid='mfa-enrolled'
+                >
+                  user enrolled
+                </p>
+              )}
             </>
           )}
         </div>
       )}
+
       <div id='recaptcha'></div>
     </div>
   );
