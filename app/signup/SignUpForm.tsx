@@ -1,5 +1,5 @@
 import { User } from 'firebase/auth';
-import { signUpWithEmailAndPassword, watchAuth } from 'quick-fire';
+import { signUpWithEmailAndPassword, watchAuth } from 'quick-fire-auth';
 import { useEffect, useState } from 'react';
 import { auth } from '../_lib/auth';
 

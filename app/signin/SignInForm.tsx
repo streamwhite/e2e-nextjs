@@ -1,12 +1,12 @@
 import { MultiFactorResolver, signOut, User } from 'firebase/auth';
 import {
-  getMfaResolver,
+  getMfaResolverInfo,
   sendMfaPhoneLoginCode,
   sendSignInLinkToEmail,
   signInWithEmailAndPassword,
   verifyMfaCode,
   watchAuth,
-} from 'quick-fire';
+} from 'quick-fire-auth';
 import { useEffect, useRef, useState } from 'react';
 import { auth } from '../_lib/auth';
 
@@ -30,13 +30,16 @@ export default function SignInForm({
   const currentResolver = useRef<MultiFactorResolver | null>(null);
 
   useEffect(() => {
-    const unsubscribe = watchAuth((user) => {
-      if (user) {
-        setUser(user);
-      } else {
-        setUser(null);
-      }
-    }, auth);
+    const unsubscribe = watchAuth({
+      handleUser: (user) => {
+        if (user) {
+          setUser(user);
+        } else {
+          setUser(null);
+        }
+      },
+      auth,
+    });
     return () => unsubscribe();
   }, [setUser]);
 
@@ -105,7 +108,10 @@ export default function SignInForm({
               setError('User not found');
             } else {
               setError(error.message);
-              const resolverInfo = getMfaResolver(error, auth);
+              const resolverInfo = getMfaResolverInfo({
+                multiFactorError: error,
+                auth,
+              });
               if (resolverInfo && resolverInfo.types.length >= 1) {
                 handleMfa(resolverInfo);
               }
@@ -161,7 +167,7 @@ export default function SignInForm({
             handleCodeInApp: true,
           };
 
-          sendSignInLinkToEmail(email, actionCodeSettings, auth);
+          sendSignInLinkToEmail({ email, actionCodeSettings, auth });
         }}
         data-testid='send-signin-link-button'
       >

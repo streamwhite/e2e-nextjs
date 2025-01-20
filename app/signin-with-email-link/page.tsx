@@ -6,7 +6,7 @@ import {
   sendMfaPhoneLoginCode,
   signInWithEmailLink,
   verifyMfaCode,
-} from 'quick-fire';
+} from 'quick-fire-auth';
 import { useEffect, useRef, useState } from 'react';
 import { auth } from '../_lib/auth';
 

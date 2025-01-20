@@ -1,4 +1,4 @@
-import { getAuth } from 'quick-fire';
+import { getAuth } from 'quick-fire-auth';
 
 const config = {
   projectId: 'e2e-nextjs-1735983960697',

@@ -10,7 +10,7 @@ import {
   updateEmail,
   updatePassword,
   watchAuth,
-} from 'quick-fire';
+} from 'quick-fire-auth';
 import { useEffect, useState } from 'react';
 
 const { email } = confidentials.signin;

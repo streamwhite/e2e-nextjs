@@ -1,30 +1,42 @@
 'use client';
-import { User } from 'firebase/auth';
+import { TotpSecret, User } from 'firebase/auth';
+import QRCode from 'qrcode';
 import {
   enrollMfaWithPhone,
+  enrollWfaWithTotp,
+  generateTotpSecret,
   sendMfaPhoneEnrollmentCode,
   watchAuth,
-} from 'quick-fire';
-import { useEffect, useState } from 'react';
+} from 'quick-fire-auth';
+import { useEffect, useRef, useState } from 'react';
 import { auth } from '../_lib/auth';
 
 export default function SignUp() {
   const [user, setUser] = useState<User | null>(null);
   const [phoneNumber, setPhoneNumber] = useState('');
-
+  // phone number
   const [isEnrollStarted, setIsEnrollStarted] = useState(false);
   const [mfaCode, setMfaCode] = useState('');
   const [isCodeSent, setIsCodeSent] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  // totp
+  const [isTotpEnrollStarted, setIsTotpEnrollStarted] = useState(false);
+
+  // ref to secret
+  const secretRef = useRef<TotpSecret | null>(null);
+  const [totpCode, setTotpCode] = useState('');
 
   useEffect(() => {
-    const unsubscribe = watchAuth((user) => {
-      if (user) {
-        setUser(user);
-      } else {
-        setUser(null);
-      }
-    }, auth);
+    const unsubscribe = watchAuth({
+      handleUser: (user) => {
+        if (user) {
+          setUser(user);
+        } else {
+          setUser(null);
+        }
+      },
+      auth,
+    });
     return () => unsubscribe();
   }, []);
 
@@ -37,6 +49,15 @@ export default function SignUp() {
       verificationCode: mfaCode,
       user: user!,
     }).then(() => setIsEnrolled(true));
+  };
+
+  const handleUri = async (uri: string) => {
+    const qrcode = document.getElementById('qrcode');
+    try {
+      await QRCode.toCanvas(qrcode, uri);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -110,6 +131,57 @@ export default function SignUp() {
                 </p>
               )}
             </>
+          )}
+
+          <button
+            onClick={() => setIsTotpEnrollStarted(true)}
+            className='px-4 py-2 bg-blue-500 text-white rounded mb-2'
+            data-testid='start-totp-enrollment'
+          >
+            start totp enrollment
+          </button>
+          {isTotpEnrollStarted && (
+            <button
+              onClick={() => {
+                generateTotpSecret({ user, youAppName: 'e2e-nextjs' }).then(
+                  (secretInfo) => {
+                    const { qrCodeUri, secret } = secretInfo;
+                    secretRef.current = secret;
+                    handleUri(qrCodeUri);
+                  }
+                );
+              }}
+              className='px-4 py-2 bg-green-500 text-white rounded'
+              data-testid='totp-enroll'
+            >
+              get qr code
+            </button>
+          )}
+          <canvas id='qrcode'></canvas>
+          {isTotpEnrollStarted && (
+            <div>
+              <input
+                type='text'
+                value={totpCode}
+                onChange={(e) => setTotpCode(e.target.value)}
+                placeholder='totp code'
+                className='mb-4 px-4 py-2 border rounded'
+                data-testid='totp-enroll-code'
+              />
+              <button
+                onClick={() => {
+                  enrollWfaWithTotp({
+                    user,
+                    secret: secretRef.current!,
+                    verificationCode: totpCode,
+                  }).then(() => setIsEnrolled(true));
+                }}
+                className='px-4 py-2 bg-yellow-500 text-white rounded'
+                data-testid='verify-mfa-code-button'
+              >
+                enroll user
+              </button>
+            </div>
           )}
         </div>
       )}

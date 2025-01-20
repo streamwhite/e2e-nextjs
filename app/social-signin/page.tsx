@@ -1,12 +1,12 @@
 'use client';
 import { MultiFactorResolver, User } from 'firebase/auth';
 import {
-  getMfaResolver,
+  getMfaResolverInfo,
   sendMfaPhoneLoginCode,
   signInWithSocialProvider,
   verifyMfaCode,
   watchAuth,
-} from 'quick-fire';
+} from 'quick-fire-auth';
 import { useEffect, useRef, useState } from 'react';
 import { auth } from '../_lib/auth';
 
@@ -14,16 +14,22 @@ export default function SignUp() {
   const [user, setUser] = useState<User | null>(null);
   const [isCodeSent, setIsCodeSent] = useState(false);
   const [mfaCode, setMfaCode] = useState('');
-  const currentResolver = useRef<MultiFactorResolver | null>(null);
+  const resolverRef = useRef<MultiFactorResolver | null>(null);
+  const [hasTotp, setHasTotp] = useState(false);
+  const [totpCode, setTotpCode] = useState('');
+  const mfaType = useRef<'sms' | 'totp' | null>(null);
 
   useEffect(() => {
-    const unsubscribe = watchAuth((user) => {
-      if (user) {
-        setUser(user);
-      } else {
-        setUser(null);
-      }
-    }, auth);
+    const unsubscribe = watchAuth({
+      handleUser: (user) => {
+        if (user) {
+          setUser(user);
+        } else {
+          setUser(null);
+        }
+      },
+      auth,
+    });
     return () => unsubscribe();
   }, []);
 
@@ -32,14 +38,18 @@ export default function SignUp() {
   };
 
   const verifyCode = () => {
-    if (currentResolver.current) {
+    if (resolverRef.current && mfaType.current) {
       verifyMfaCode({
-        verificationCode: mfaCode,
-        multiFactorResolver: currentResolver.current,
-        type: 'sms',
-      }).then((userCredential) => {
-        setUser(userCredential?.user as User);
-      });
+        verificationCode: mfaCode || totpCode,
+        multiFactorResolver: resolverRef.current,
+        type: mfaType.current!,
+      })
+        .then((userCredential) => {
+          setUser(userCredential?.user as User);
+        })
+        .catch((error) => {
+          console.error('verify code error:', error);
+        });
     }
   };
 
@@ -50,7 +60,8 @@ export default function SignUp() {
     types: string[];
     resolver: MultiFactorResolver;
   }) => {
-    currentResolver.current = resolver;
+    resolverRef.current = resolver;
+
     if (types.length === 1) {
       // send code directly
       if (types[0] === 'sms') {
@@ -60,11 +71,31 @@ export default function SignUp() {
           auth,
         }).then(() => {
           setIsCodeSent(true);
+          mfaType.current = 'sms';
         });
+      }
+      if (types[0] === 'totp') {
+        setHasTotp(true);
+        mfaType.current = 'totp';
       }
     } else if (types.length >= 2) {
       // show options to user to select
+
       // use same input
+      if (types.includes('sms')) {
+        sendMfaPhoneLoginCode({
+          resolver,
+          recaptchaContainerId: 'recaptcha',
+          auth,
+        }).then(() => {
+          setIsCodeSent(true);
+          mfaType.current = 'sms';
+        });
+      }
+      if (types.includes('totp')) {
+        setHasTotp(true);
+        mfaType.current = 'totp';
+      }
     }
   };
 
@@ -72,7 +103,7 @@ export default function SignUp() {
     try {
       await signInWithSocialProvider({ providerName: 'google', auth }).catch(
         (error) => {
-          const result = getMfaResolver(error, auth);
+          const result = getMfaResolverInfo({ multiFactorError: error, auth });
           if (result && result.types.length >= 1) {
             handleMfa(result);
           }
@@ -87,7 +118,7 @@ export default function SignUp() {
     try {
       await signInWithSocialProvider({ providerName: 'github', auth }).catch(
         (error) => {
-          const result = getMfaResolver(error, auth);
+          const result = getMfaResolverInfo({ multiFactorError: error, auth });
           if (result && result.types.length >= 1) {
             handleMfa(result);
           }
@@ -141,6 +172,33 @@ export default function SignUp() {
         >
           Verify Code
         </button>
+      )}
+
+      {hasTotp && (
+        <div>
+          <input
+            type='text'
+            placeholder='Enter TOTP Code'
+            className='px-4 py-2 mb-2 border rounded-md'
+            value={totpCode}
+            onChange={(e) => setTotpCode(e.target.value)}
+            data-testid='totp-code-input'
+          />
+          <button
+            onClick={async () => {
+              const userCredential = await verifyMfaCode({
+                verificationCode: totpCode,
+                multiFactorResolver: resolverRef.current!,
+                type: 'totp',
+              });
+              setUser(userCredential?.user as User);
+            }}
+            className='px-4 py-2 mb-2 text-white bg-yellow-500 rounded hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-75'
+            data-testid='verify-code-button'
+          >
+            sign in with totp
+          </button>
+        </div>
       )}
 
       <div id='recaptcha'></div>
