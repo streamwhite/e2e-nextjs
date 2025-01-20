@@ -48,6 +48,7 @@ const ResetPassPage = () => {
   const handleVerifyNewEmail = async () => {
     if (auth.currentUser) {
       try {
+        // verify and update email at same time
         await verifyBeforeUpdateEmail(auth.currentUser, newEmail);
         setNewEmailVerificationSent(true);
       } catch (error) {
@@ -57,6 +58,7 @@ const ResetPassPage = () => {
   };
 
   const handleUpdateEmail = async () => {
+    // it is deprecated
     if (auth.currentUser) {
       try {
         await updateEmail(auth.currentUser, newEmail);

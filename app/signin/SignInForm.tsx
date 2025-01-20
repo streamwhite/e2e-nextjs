@@ -50,6 +50,7 @@ export default function SignInForm({
     currentResolver.current = resolver;
     if (types.length === 1) {
       // send code directly
+      // todo: move this to a function handle single mfa
       if (types[0] === 'sms') {
         sendMfaPhoneLoginCode({
           resolver,
@@ -104,9 +105,9 @@ export default function SignInForm({
               setError('User not found');
             } else {
               setError(error.message);
-              const result = getMfaResolver(error, auth);
-              if (result && result.types.length >= 1) {
-                handleMfa(result);
+              const resolverInfo = getMfaResolver(error, auth);
+              if (resolverInfo && resolverInfo.types.length >= 1) {
+                handleMfa(resolverInfo);
               }
             }
           });
