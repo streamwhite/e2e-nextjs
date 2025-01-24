@@ -2,7 +2,7 @@
 
 import { MultiFactorResolver, UserCredential } from 'firebase/auth';
 import {
-  getMfaResolver,
+  getMfaResolverInfo,
   sendMfaPhoneLoginCode,
   signInWithEmailLink,
   verifyMfaCode,
@@ -43,12 +43,18 @@ const Page = () => {
   };
 
   useEffect(() => {
-    signInWithEmailLink(window.location.href, auth)
+    signInWithEmailLink({
+      auth,
+      url: window.location.href,
+    })
       .then((userCredential) => {
         setUserCredential(userCredential);
       })
       .catch((error) => {
-        const result = getMfaResolver(error, auth);
+        const result = getMfaResolverInfo({
+          multiFactorError: error,
+          auth,
+        });
         if (result && result.types.length >= 1) {
           handleMfa(result);
         }

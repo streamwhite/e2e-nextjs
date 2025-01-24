@@ -20,13 +20,16 @@ export default function SignUpForm({
   const [password, setPassword] = useState<string>('');
 
   useEffect(() => {
-    const unsubscribe = watchAuth((user) => {
-      if (user) {
-        setUser(user);
-      } else {
-        setUser(null);
-      }
-    }, auth);
+    const unsubscribe = watchAuth({
+      handleUser: (user) => {
+        if (user) {
+          setUser(user);
+        } else {
+          setUser(null);
+        }
+      },
+      auth,
+    });
     return () => unsubscribe();
   }, [setUser]);
 

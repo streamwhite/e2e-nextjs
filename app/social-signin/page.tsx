@@ -157,7 +157,7 @@ export default function SignUp() {
       {isCodeSent && (
         <input
           type='text'
-          placeholder='Enter OTP Code'
+          placeholder='Enter Phone Code'
           className='px-4 py-2 mb-2 border rounded-md'
           value={mfaCode}
           onChange={handleOtpCodeChange}

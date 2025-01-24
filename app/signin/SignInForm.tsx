@@ -103,20 +103,24 @@ export default function SignInForm({
       <button
         className='px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600'
         onClick={() => {
-          signInWithEmailAndPassword(auth, email, password).catch((error) => {
-            if (error.code === 'auth/user-not-found') {
-              setError('User not found');
-            } else {
-              setError(error.message);
-              const resolverInfo = getMfaResolverInfo({
-                multiFactorError: error,
-                auth,
-              });
-              if (resolverInfo && resolverInfo.types.length >= 1) {
-                handleMfa(resolverInfo);
+          signInWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+              setUser(userCredential.user);
+            })
+            .catch((error) => {
+              if (error.code === 'auth/user-not-found') {
+                setError('User not found');
+              } else {
+                setError(error.message);
+                const resolverInfo = getMfaResolverInfo({
+                  multiFactorError: error,
+                  auth,
+                });
+                if (resolverInfo && resolverInfo.types.length >= 1) {
+                  handleMfa(resolverInfo);
+                }
               }
-            }
-          });
+            });
         }}
         data-testid='sign-in'
       >
