@@ -1,6 +1,13 @@
 'use client';
-import { MultiFactorResolver, User } from 'firebase/auth';
 import {
+  AuthCredential,
+  MultiFactorResolver,
+  reauthenticateWithCredential,
+  User,
+  UserCredential,
+} from 'firebase/auth';
+import {
+  getAuthCredential,
   getMfaResolverInfo,
   sendMfaPhoneLoginCode,
   signInWithSocialProvider,
@@ -18,6 +25,7 @@ export default function SignUp() {
   const [hasTotp, setHasTotp] = useState(false);
   const [totpCode, setTotpCode] = useState('');
   const mfaType = useRef<'sms' | 'totp' | null>(null);
+  const userCredentialRef = useRef<UserCredential | null>(null);
 
   useEffect(() => {
     const unsubscribe = watchAuth({
@@ -116,14 +124,36 @@ export default function SignUp() {
 
   const handleGithubSignIn = async () => {
     try {
-      await signInWithSocialProvider({ providerName: 'github', auth }).catch(
-        (error) => {
+      await signInWithSocialProvider({ providerName: 'github', auth })
+        .then((userCredential) => {
+          userCredentialRef.current = userCredential;
+          setTimeout(() => {
+            const credential = getAuthCredential({
+              userCredential,
+              provider: 'github',
+            }) as AuthCredential;
+            reauthenticateWithCredential(userCredential.user!, credential)
+              .then((userCredential) => {
+                // log user id
+                console.log('user id:', userCredential.user?.uid);
+              })
+              .catch((error) => {
+                const result = getMfaResolverInfo({
+                  multiFactorError: error,
+                  auth,
+                });
+                if (result && result.types.length >= 1) {
+                  handleMfa(result);
+                }
+              });
+          }, 0.5 * 60 * 1000 + 1 * 1000);
+        })
+        .catch((error) => {
           const result = getMfaResolverInfo({ multiFactorError: error, auth });
           if (result && result.types.length >= 1) {
             handleMfa(result);
           }
-        }
-      );
+        });
     } catch (error) {
       console.error('GitHub sign-in error:', error);
     }
@@ -192,6 +222,27 @@ export default function SignUp() {
                 type: 'totp',
               });
               setUser(userCredential?.user as User);
+              userCredentialRef.current = userCredential;
+              setTimeout(() => {
+                const confs = getAuthCredential({
+                  userCredential: userCredentialRef.current!,
+                  provider: 'google',
+                });
+                reauthenticateWithCredential(
+                  userCredential.user!,
+                  confs as AuthCredential
+                )
+                  .then(() => {})
+                  .catch((error) => {
+                    const resolverInfo = getMfaResolverInfo({
+                      multiFactorError: error,
+                      auth,
+                    });
+                    if (resolverInfo && resolverInfo.types.length >= 1) {
+                      handleMfa(resolverInfo);
+                    }
+                  });
+              }, 0.5 * 60 * 1000 + 30 * 1000);
             }}
             className='px-4 py-2 mb-2 text-white bg-yellow-500 rounded hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-75'
             data-testid='verify-code-button'

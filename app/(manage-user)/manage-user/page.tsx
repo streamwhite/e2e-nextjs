@@ -5,16 +5,17 @@ import { confidentials } from '@/tests/auth/constants';
 import { verifyBeforeUpdateEmail } from 'firebase/auth';
 import {
   deleteUser,
+  LanguageCodes,
   sendPasswordResetEmail,
-  sendVerificationEmail,
-  updateEmail,
+  sendEmailAddressVerificationEmail as sendVerificationEmail,
+  verifyAndUpdateToNewEmail as updateEmail,
   updatePassword,
   watchAuth,
 } from 'quick-fire-auth';
 import { useEffect, useState } from 'react';
 
 const { email } = confidentials.signin;
-const lang = 'zh';
+const lang = 'zh-tw';
 
 const ResetPassPage = () => {
   const [isEmailSent, setIsEmailSent] = useState(false);
@@ -27,20 +28,31 @@ const ResetPassPage = () => {
     useState(false);
 
   useEffect(() => {
-    const unsubscribe = watchAuth((user) => {
-      setUser(user || null);
-    }, auth);
+    const unsubscribe = watchAuth({
+      handleUser: (user) => {
+        setUser(user || null);
+      },
+      auth,
+    });
     return () => unsubscribe();
   }, []);
 
   const handleSendPasswordResetEmail = () => {
-    sendPasswordResetEmail(auth, email, lang).then(() => {
+    sendPasswordResetEmail({
+      email,
+      auth,
+      locale: lang as LanguageCodes,
+    }).then(() => {
       setIsEmailSent(true);
     });
   };
 
   const handleSendVerificationEmail = () => {
-    sendVerificationEmail(auth.currentUser!, auth, lang).then(() => {
+    sendVerificationEmail({
+      user: auth.currentUser!,
+      auth,
+      locale: lang as LanguageCodes,
+    }).then(() => {
       setIsEmailSent(true);
     });
   };
@@ -63,7 +75,11 @@ const ResetPassPage = () => {
       try {
         await updateEmail(auth.currentUser, newEmail);
         setIsEmailUpdated(true);
-        await sendVerificationEmail(auth.currentUser, auth, lang);
+        await sendVerificationEmail({
+          user: auth.currentUser,
+          auth,
+          locale: lang as LanguageCodes,
+        });
       } catch (error) {
         console.error('Error updating email:', error);
       }

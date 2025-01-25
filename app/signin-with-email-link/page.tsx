@@ -1,7 +1,14 @@
 'use client';
 
-import { MultiFactorResolver, UserCredential } from 'firebase/auth';
 import {
+  AuthCredential,
+  MultiFactorResolver,
+  reauthenticateWithCredential,
+  User,
+  UserCredential,
+} from 'firebase/auth';
+import {
+  getAuthCredential,
   getMfaResolverInfo,
   sendMfaPhoneLoginCode,
   signInWithEmailLink,
@@ -41,6 +48,7 @@ const Page = () => {
       // use same input
     }
   };
+  const userCredentialRef = useRef<UserCredential | null>(null);
 
   useEffect(() => {
     signInWithEmailLink({
@@ -49,6 +57,34 @@ const Page = () => {
     })
       .then((userCredential) => {
         setUserCredential(userCredential);
+        userCredentialRef.current = userCredential;
+        setTimeout(() => {
+          const confs = getAuthCredential({
+            provider: 'email-link',
+            signInLinkInEmail: window.location.href,
+            userCredential: userCredentialRef.current as UserCredential,
+            email: userCredential.user.email as string,
+          });
+          reauthenticateWithCredential(
+            userCredentialRef.current?.user as User,
+            confs as AuthCredential
+          )
+            .then(() => {
+              // not working, credentialWithLink "Firebase: Error (auth/invalid-action-code)."
+              // have to re-auth with another way, since link is already used only can be used once
+              // Firebase auth auth/invalid-action-code when using a code twice - Stack Overflow: https://stackoverflow.com/questions/74720362/firebase-auth-auth-invalid-action-code-when-using-a-code-twice
+              console.log('User re-authenticated');
+            })
+            .catch((error) => {
+              const resolverInfo = getMfaResolverInfo({
+                multiFactorError: error,
+                auth,
+              });
+              if (resolverInfo && resolverInfo.types.length >= 1) {
+                handleMfa(resolverInfo);
+              }
+            });
+        }, 0.3 * 60 * 1000 + 1 * 1000);
       })
       .catch((error) => {
         const result = getMfaResolverInfo({

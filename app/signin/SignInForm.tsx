@@ -1,5 +1,13 @@
-import { MultiFactorResolver, signOut, User } from 'firebase/auth';
 import {
+  AuthCredential,
+  MultiFactorResolver,
+  reauthenticateWithCredential,
+  signOut,
+  User,
+  UserCredential,
+} from 'firebase/auth';
+import {
+  getAuthCredential,
   getMfaResolverInfo,
   sendMfaPhoneLoginCode,
   sendSignInLinkToEmail,
@@ -69,6 +77,8 @@ export default function SignInForm({
     }
   };
 
+  const userCredentialRef = useRef<UserCredential | null>(null);
+
   return (
     <div className='signin flex flex-col space-y-4'>
       <input
@@ -106,6 +116,31 @@ export default function SignInForm({
           signInWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
               setUser(userCredential.user);
+              userCredentialRef.current = userCredential;
+              setTimeout(() => {
+                const confs = getAuthCredential({
+                  provider: 'email-password',
+                  email,
+                  password,
+                  userCredential: userCredentialRef.current as UserCredential,
+                });
+                reauthenticateWithCredential(
+                  userCredentialRef.current?.user as User,
+                  confs as AuthCredential
+                )
+                  .then(() => {
+                    console.log('User re-authenticated');
+                  })
+                  .catch((error) => {
+                    const resolverInfo = getMfaResolverInfo({
+                      multiFactorError: error,
+                      auth,
+                    });
+                    if (resolverInfo && resolverInfo.types.length >= 1) {
+                      handleMfa(resolverInfo);
+                    }
+                  });
+              }, 0.5 * 60 * 1000 + 1 * 1000);
             })
             .catch((error) => {
               if (error.code === 'auth/user-not-found') {
@@ -171,7 +206,11 @@ export default function SignInForm({
             handleCodeInApp: true,
           };
 
-          sendSignInLinkToEmail({ email, actionCodeSettings, auth });
+          sendSignInLinkToEmail({ email, actionCodeSettings, auth }).then(
+            () => {
+              console.log('Email sent');
+            }
+          );
         }}
         data-testid='send-signin-link-button'
       >

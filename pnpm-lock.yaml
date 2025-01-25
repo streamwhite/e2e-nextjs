@@ -18,8 +18,8 @@ importers:
         specifier: ^1.5.4
         version: 1.5.4
       quick-fire-auth:
-        specifier: file:quick-fire-auth-1.0.13.tgz
-        version: file:quick-fire-auth-1.0.13.tgz
+        specifier: file:quick-fire-auth-2.0.1.tgz
+        version: file:quick-fire-auth-2.0.1.tgz
       react:
         specifier: ^19.0.0
         version: 19.0.0
@@ -1712,9 +1712,9 @@ packages:
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
 
-  quick-fire-auth@file:quick-fire-auth-1.0.13.tgz:
-    resolution: {integrity: sha512-mWVkiyRRuCv2awIEjUuLUp2+j5tqHSUTt9yWXBDBYHIoOR74VtaB0151m5kzhxIhRckUGSQW1tom0f23XDwlMg==, tarball: file:quick-fire-auth-1.0.13.tgz}
-    version: 1.0.13
+  quick-fire-auth@file:quick-fire-auth-2.0.1.tgz:
+    resolution: {integrity: sha512-KkIVYGvE1t1q/UencVcusjxoWsDEIqNXdf2uuQ4uwkoKIcrmKkcL00fMntzY4k7ntKG0Ix0+n85cFvRpNIoc5g==, tarball: file:quick-fire-auth-2.0.1.tgz}
+    version: 2.0.1
 
   react-dom@19.0.0:
     resolution: {integrity: sha512-4GV5sHFG0e/0AD4X+ySy6UJd3jVl1iNsNHdpad0qhABJ11twS3TTBnseqsKurKcsNqCEFeGL3uLpVChpIO3QfQ==}
@@ -4010,7 +4010,7 @@ snapshots:
 
   queue-microtask@1.2.3: {}
 
-  quick-fire-auth@file:quick-fire-auth-1.0.13.tgz:
+  quick-fire-auth@file:quick-fire-auth-2.0.1.tgz:
     dependencies:
       firebase: 11.1.0
     transitivePeerDependencies:
