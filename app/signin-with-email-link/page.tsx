@@ -44,8 +44,6 @@ const Page = () => {
         });
       }
     } else if (types.length >= 2) {
-      // show options to user to select
-      // use same input
     }
   };
   const userCredentialRef = useRef<UserCredential | null>(null);
@@ -84,6 +82,7 @@ const Page = () => {
                 handleMfa(resolverInfo);
               }
             });
+          // only for quick testing
         }, 0.3 * 60 * 1000 + 1 * 1000);
       })
       .catch((error) => {
