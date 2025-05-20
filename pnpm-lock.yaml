@@ -21,8 +21,8 @@ importers:
         specifier: file:quick-fire-auth-2.0.1.tgz
         version: file:quick-fire-auth-2.0.1.tgz
       quick-fire-store:
-        specifier: file:quick-fire-store-1.4.0.tgz
-        version: file:quick-fire-store-1.4.0.tgz
+        specifier: file:quick-fire-store-1.6.0.tgz
+        version: file:quick-fire-store-1.6.0.tgz
       react:
         specifier: ^19.0.0
         version: 19.0.0
@@ -1719,9 +1719,9 @@ packages:
     resolution: {integrity: sha512-KkIVYGvE1t1q/UencVcusjxoWsDEIqNXdf2uuQ4uwkoKIcrmKkcL00fMntzY4k7ntKG0Ix0+n85cFvRpNIoc5g==, tarball: file:quick-fire-auth-2.0.1.tgz}
     version: 2.0.1
 
-  quick-fire-store@file:quick-fire-store-1.4.0.tgz:
-    resolution: {integrity: sha512-7roj2iXFy4rToNMSA8P7DoNaeh9js1irAJQvARTzJjmzlml1BUKCZ7/HZ/hqz8uvGbg6uSWsJm9VV0CofPcqyw==, tarball: file:quick-fire-store-1.4.0.tgz}
-    version: 1.4.0
+  quick-fire-store@file:quick-fire-store-1.6.0.tgz:
+    resolution: {integrity: sha512-nHVns9n4fAtV3x7s/9M/R5it22fdW7TetUCgChWup4snk73MqYWV7aaTGF+kgZPrFqvoAIf3TYQke5zq2kn1lA==, tarball: file:quick-fire-store-1.6.0.tgz}
+    version: 1.6.0
 
   react-dom@19.0.0:
     resolution: {integrity: sha512-4GV5sHFG0e/0AD4X+ySy6UJd3jVl1iNsNHdpad0qhABJ11twS3TTBnseqsKurKcsNqCEFeGL3uLpVChpIO3QfQ==}
@@ -4027,7 +4027,7 @@ snapshots:
     transitivePeerDependencies:
       - '@react-native-async-storage/async-storage'
 
-  quick-fire-store@file:quick-fire-store-1.4.0.tgz:
+  quick-fire-store@file:quick-fire-store-1.6.0.tgz:
     dependencies:
       firebase: 11.7.1
     transitivePeerDependencies:

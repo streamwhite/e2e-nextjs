@@ -72,7 +72,10 @@ const FirestoreFunctionsPage = () => {
                   collectionRef: collection(db, 'posts'),
                   compositeFilterConstraint,
                 });
-                const result = await getSumForQuery(query, 'qty');
+                const result = await getSumForQuery({
+                  query,
+                  field: 'qty',
+                });
                 setQty(result);
               } catch (err) {
                 setError((err as Error).message);
@@ -105,7 +108,7 @@ const FirestoreFunctionsPage = () => {
                   collectionRef: collection(db, 'posts'),
                   compositeFilterConstraint,
                 });
-                const count = await getCountForQuery(query);
+                const count = await getCountForQuery({ query });
 
                 setCount(count);
               } catch (err) {
@@ -139,7 +142,10 @@ const FirestoreFunctionsPage = () => {
                   collectionRef: collection(db, 'posts'),
                   compositeFilterConstraint,
                 });
-                const average = await getAverageForQuery(query, 'qty');
+                const average = await getAverageForQuery({
+                  query,
+                  field: 'qty',
+                });
 
                 setAverage(average);
               } catch (err) {
@@ -167,10 +173,15 @@ const FirestoreFunctionsPage = () => {
               try {
                 setLoading(true);
                 setError(null);
-                await createDoc(db, 'posts', undefined, {
-                  title: 'title',
-                  qty: 1,
-                  desc: 'this is new post',
+                await createDoc({
+                  db,
+                  collectionPath: 'posts',
+                  docId: undefined,
+                  documentData: {
+                    title: 'random title',
+                    qty: 5,
+                    desc: 'this is a random doc',
+                  },
                 });
                 setIsDocCreated(true);
               } catch (err) {
@@ -196,10 +207,15 @@ const FirestoreFunctionsPage = () => {
                     setError('Document ID is required.');
                     return;
                   }
-                  await createDoc(db, 'posts', customDocId, {
-                    title: 'custom title',
-                    qty: 5,
-                    desc: 'this is a custom doc',
+                  await createDoc({
+                    db,
+                    collectionPath: 'posts',
+                    docId: customDocId,
+                    documentData: {
+                      title: 'custom title',
+                      qty: 5,
+                      desc: 'this is a custom doc',
+                    },
                   });
                   setIsDocWithCustomIdCreated(true);
                 } catch (err) {
@@ -235,10 +251,15 @@ const FirestoreFunctionsPage = () => {
                     setError('Document ID is required.');
                     return;
                   }
-                  await createDoc(db, 'posts', existingDocId, {
-                    title: 'existed doc Title',
-                    qty: 0,
-                    desc: 'this is an existed doc',
+                  await createDoc({
+                    db,
+                    collectionPath: 'posts',
+                    docId: existingDocId,
+                    documentData: {
+                      title: 'existed doc Title',
+                      qty: 0,
+                      desc: 'this is an existed doc',
+                    },
                   });
                 } catch (err) {
                   setError((err as Error).message);
@@ -265,10 +286,15 @@ const FirestoreFunctionsPage = () => {
               try {
                 setLoading(true);
                 setError(null);
-                await createDoc(db, 'invalid-collection', undefined, {
-                  title: 'invalid',
-                  qty: 0,
-                  desc: 'this should fail',
+                await createDoc({
+                  db,
+                  collectionPath: 'invalid-collection',
+                  docId: undefined,
+                  documentData: {
+                    title: 'invalid',
+                    qty: 0,
+                    desc: 'this should fail',
+                  },
                 });
               } catch (err) {
                 setError((err as Error).message);
@@ -294,7 +320,13 @@ const FirestoreFunctionsPage = () => {
               try {
                 setLoading(true);
                 setError(null);
-                await deleteField(db, 'posts/fV2R5FLNQOGPAEGY08Js', 'qty');
+                await deleteField({
+                  /* db, 'posts/fV2R5FLNQOGPAEGY08Js', 'qty'
+                   */
+                  db,
+                  docPath: 'posts/fV2R5FLNQOGPAEGY08Js',
+                  field: 'qty',
+                });
                 setIsFieldDeleted(true);
               } catch (err) {
                 setError((err as Error).message);
@@ -398,13 +430,16 @@ const FirestoreFunctionsPage = () => {
                 try {
                   setLoading(true);
                   setError(null);
-                  await updateDoc(
+                  await updateDoc({
                     db,
-                    'posts',
-                    'qty',
-                    'fV2R5FLNQOGPAEGY08Js',
-                    10
-                  );
+                    collectionPath: 'posts',
+                    fieldPath: 'qty',
+                    docId: 'fV2R5FLNQOGPAEGY08Js',
+                    updateValue: {
+                      operationType: 'updateFieldWithPrimitive',
+                      value: 10,
+                    },
+                  });
                   setIsDocUpdated(true);
                 } catch (err) {
                   setError((err as Error).message);
@@ -422,148 +457,265 @@ const FirestoreFunctionsPage = () => {
               </p>
             )}
           </div>
-        </div>
-
-        <div>
-          <div>
-            <button
-              className='px-4 py-2 bg-cyan-500 text-white rounded hover:bg-cyan-600'
-              data-testid='watch-doc'
-              onClick={() => {
-                try {
-                  setError(null);
-                  const docRef = doc(db, 'posts/fV2R5FLNQOGPAEGY08Js');
-                  const { getData } = watchDoc(
-                    docRef,
-                    false,
-                    'default',
-                    (err) => {
-                      setError(err.message);
-                    }
-                  );
-                  setInterval(() => {
-                    setCurrentDocData(getData());
-                  }, 1000);
-                } catch (err) {
-                  setError((err as Error).message);
-                }
-              }}
-            >
-              Watch Document
-            </button>
-            {
-              <p className={'text-green-500'} data-testid='watch-doc-result'>
-                {currentDocData !== null && currentDocData !== undefined
-                  ? JSON.stringify(currentDocData)
-                  : 'No data available'}
-              </p>
-            }
-          </div>
-          <div>
-            <button
-              className='px-4 py-2 bg-lime-500 text-white rounded hover:bg-lime-600'
-              data-testid='watch-docs'
-              onClick={() => {
-                try {
-                  setError(null);
-                  const query = createQuery({
-                    collectionRef: collection(db, 'posts'),
-                    compositeFilterConstraint: and(where('desc', '!=', 'desc')),
-                  });
-                  const { getData } = watchDocs(
-                    query,
-                    false,
-                    'default',
-                    (err) => {
-                      setError(err.message);
-                    }
-                  );
-                  setInterval(() => {
-                    setCurrentDocsData(getData());
-                  }, 1000);
-                } catch (err) {
-                  setError((err as Error).message);
-                }
-              }}
-            >
-              Watch Documents
-            </button>
-            {
-              <p className={'text-green-500'} data-testid='watch-docs-result'>
-                {currentDocsData !== null && currentDocsData !== undefined
-                  ? JSON.stringify(currentDocsData)
-                  : 'No data available'}
-              </p>
-            }
-          </div>
-        </div>
-        <div className='nonContraitFilterstaints'>
           <div>
             <h2 className='text-xl font-bold mb-2'>
-              Test Multiple Conditions Query
+              Update Document with Operations
             </h2>
+            <div>
+              <button
+                className='px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'
+                data-testid='update-doc-array-union'
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    setError(null);
+                    await updateDoc({
+                      db,
+                      collectionPath: 'posts',
+                      docId: 'fV2R5FLNQOGPAEGY08Js',
+                      fieldPath: 'tags',
+                      updateValue: {
+                        operationType: 'arrayUnion',
+                        value: ['newTag', 'another tag'],
+                      },
+                    });
+                    setIsDocUpdated(true);
+                  } catch (err) {
+                    setError((err as Error).message);
+                    setIsDocUpdated(false);
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+              >
+                Array Union
+              </button>
+            </div>
+          </div>
+          <div>
             <button
-              className='px-4 py-2 bg-violet-500 text-white rounded hover:bg-violet-600'
-              data-testid='test-multiple-conditions'
+              className='px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600'
+              data-testid='update-doc-array-remove'
               onClick={async () => {
                 try {
                   setLoading(true);
                   setError(null);
-
-                  const compositeFilterConstraint = and(
-                    where('qty', '>', 1),
-                    where('desc', '!=', null),
-                    where('title', '==', 'custom title')
-                  );
-                  const orderByFields: {
-                    name: string;
-                    order: 'desc' | 'asc';
-                  }[] = [{ name: 'qty', order: 'desc' }];
-                  const limitParam = 10;
-                  const startAtParam = 9;
-
-                  const queryParams = {
-                    limit: limitParam,
-                    startAt: startAt(startAtParam),
-                    // Uncomment and modify the following lines as needed:
-                    // startAfter: [startAfterParam],
-                    // endAt: [endAtParam],
-                    // endBefore: [endBeforeParam],
-                  };
-
-                  const query = createQuery({
-                    collectionRef: collection(db, 'posts'),
-                    compositeFilterConstraint,
-                    orderByFields,
-                    ...queryParams,
+                  await updateDoc({
+                    db,
+                    collectionPath: 'posts',
+                    docId: 'fV2R5FLNQOGPAEGY08Js',
+                    fieldPath: 'tags',
+                    updateValue: {
+                      operationType: 'arrayRemove',
+                      value: ['newTag', 'another tag'],
+                    },
                   });
-                  const docsData = await getDocsData({
-                    query,
-                    isFromCache: false,
-                  });
-                  setQueryDocsData(docsData);
+                  setIsDocUpdated(true);
                 } catch (err) {
                   setError((err as Error).message);
+                  setIsDocUpdated(false);
                 } finally {
                   setLoading(false);
                 }
               }}
             >
-              Test Multiple Conditions Query
+              Array Remove
             </button>
-            {queryDocsData && (
-              <pre
-                className='text-green-500'
-                data-testid='multiple-conditions-result'
-              >
-                {JSON.stringify(queryDocsData as object, null, 2)}
-              </pre>
-            )}
           </div>
+          <div>
+            <button
+              className='px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600'
+              data-testid='update-doc-increment'
+              onClick={async () => {
+                try {
+                  setLoading(true);
+                  setError(null);
+                  await updateDoc({
+                    db,
+                    collectionPath: 'posts',
+                    docId: 'fV2R5FLNQOGPAEGY08Js',
+                    fieldPath: 'qty',
+                    updateValue: { operationType: 'increment', value: 1 },
+                  });
+                  setIsDocUpdated(true);
+                } catch (err) {
+                  setError((err as Error).message);
+                  setIsDocUpdated(false);
+                } finally {
+                  setLoading(false);
+                }
+              }}
+            >
+              Increment
+            </button>
+          </div>
+          {isDocUpdated && (
+            <p
+              data-testid='update-doc-operations-result'
+              className='text-green-500'
+            >
+              Document successfully updated with operation!
+            </p>
+          )}
         </div>
       </div>
-      {loading && <p className='text-gray-500'>Loading...</p>}
-      {error && <p className='text-red-500'>{error}</p>}
+
+      <div>
+        <div>
+          <button
+            className='px-4 py-2 bg-cyan-500 text-white rounded hover:bg-cyan-600'
+            data-testid='watch-doc'
+            onClick={() => {
+              try {
+                setError(null);
+                const docRef = doc(db, 'posts/fV2R5FLNQOGPAEGY08Js');
+                watchDoc({
+                  documentRef: docRef,
+                  includeMetadataChanges: false,
+                  source: 'default',
+                  onError: (err) => {
+                    setError(err.message);
+                  },
+                  onChange: (info) => {
+                    if (info.eventSource === 'local') {
+                      console.log('Local changes detected');
+                    } else {
+                      console.log('Server changes detected');
+                    }
+                    setCurrentDocData(info.data);
+                  },
+                });
+              } catch (err) {
+                setError((err as Error).message);
+              }
+            }}
+          >
+            Watch Document
+          </button>
+          {
+            <p className={'text-green-500'} data-testid='watch-doc-result'>
+              {currentDocData !== null && currentDocData !== undefined
+                ? JSON.stringify(currentDocData)
+                : 'No data available'}
+            </p>
+          }
+        </div>
+        <div>
+          <button
+            className='px-4 py-2 bg-lime-500 text-white rounded hover:bg-lime-600'
+            data-testid='watch-docs'
+            onClick={() => {
+              try {
+                setError(null);
+                const query = createQuery({
+                  collectionRef: collection(db, 'posts'),
+                  compositeFilterConstraint: and(where('desc', '!=', 'desc')),
+                });
+                watchDocs({
+                  query,
+
+                  includeMetadataChanges: false,
+                  source: 'default',
+                  onError: (err) => {
+                    setError(err.message);
+                  },
+                  onChange: (info) => {
+                    if (info.eventSource === 'local') {
+                      console.log('Local changes detected');
+                    } else {
+                      console.log('Server changes detected');
+                    }
+                    setCurrentDocsData(info.data);
+                  },
+                });
+                setInterval(() => {
+                  setCurrentDocsData(getData());
+                }, 1000);
+              } catch (err) {
+                setError((err as Error).message);
+              }
+            }}
+          >
+            Watch Documents
+          </button>
+          {
+            <p className={'text-green-500'} data-testid='watch-docs-result'>
+              {currentDocsData !== null && currentDocsData !== undefined
+                ? JSON.stringify(currentDocsData)
+                : 'No data available'}
+            </p>
+          }
+        </div>
+      </div>
+      <div className='nonContraitFilterstaints'>
+        <div>
+          <h2 className='text-xl font-bold mb-2'>
+            Test Multiple Conditions Query
+          </h2>
+          <button
+            className='px-4 py-2 bg-violet-500 text-white rounded hover:bg-violet-600'
+            data-testid='test-multiple-conditions'
+            onClick={async () => {
+              try {
+                setLoading(true);
+                setError(null);
+
+                const compositeFilterConstraint = and(
+                  where('qty', '>', 1),
+                  where('desc', '!=', null),
+                  where('title', '==', 'custom title')
+                );
+                const orderByFields: {
+                  name: string;
+                  order: 'desc' | 'asc';
+                }[] = [{ name: 'qty', order: 'desc' }];
+                const limitParam = 10;
+                const startAtParam = 9;
+
+                const queryParams = {
+                  limit: limitParam,
+                  startAt: startAt(startAtParam),
+                  // Uncomment and modify the following lines as needed:
+                  // startAfter: [startAfterParam],
+                  // endAt: [endAtParam],
+                  // endBefore: [endBeforeParam],
+                };
+
+                const query = createQuery({
+                  collectionRef: collection(db, 'posts'),
+                  compositeFilterConstraint,
+                  orderByFields,
+                  ...queryParams,
+                });
+                const docsData = await getDocsData({
+                  query,
+                  isFromCache: false,
+                });
+                setQueryDocsData(docsData);
+              } catch (err) {
+                setError((err as Error).message);
+              } finally {
+                setLoading(false);
+              }
+            }}
+          >
+            Test Multiple Conditions Query
+          </button>
+          {queryDocsData && (
+            <pre
+              className='text-green-500'
+              data-testid='multiple-conditions-result'
+            >
+              {JSON.stringify(queryDocsData as object, null, 2)}
+            </pre>
+          )}
+        </div>
+      </div>
+
+      <div>
+        {loading && 'Loading...'}
+        {error && <p className='text-red-500'>{error}</p>}
+      </div>
     </div>
   );
 };
