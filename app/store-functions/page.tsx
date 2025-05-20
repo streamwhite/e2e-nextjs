@@ -13,6 +13,7 @@ import {
   getFirestore,
   getSumForQuery,
   initializeApp,
+  startAt,
   updateDoc,
   watchDoc,
   watchDocs,
@@ -47,6 +48,7 @@ const FirestoreFunctionsPage = () => {
   const [isDocUpdated, setIsDocUpdated] = useState(false);
   const [currentDocData, setCurrentDocData] = useState<unknown | null>(null);
   const [currentDocsData, setCurrentDocsData] = useState<unknown | null>(null);
+  const [queryDocsData, setQueryDocsData] = useState<object | null>(null);
 
   return (
     <div className='p-4'>
@@ -493,6 +495,70 @@ const FirestoreFunctionsPage = () => {
                   : 'No data available'}
               </p>
             }
+          </div>
+        </div>
+        <div className='nonContraitFilterstaints'>
+          <div>
+            <h2 className='text-xl font-bold mb-2'>
+              Test Multiple Conditions Query
+            </h2>
+            <button
+              className='px-4 py-2 bg-violet-500 text-white rounded hover:bg-violet-600'
+              data-testid='test-multiple-conditions'
+              onClick={async () => {
+                try {
+                  setLoading(true);
+                  setError(null);
+
+                  const compositeFilterConstraint = and(
+                    where('qty', '>', 1),
+                    where('desc', '!=', null),
+                    where('title', '==', 'custom title')
+                  );
+                  const orderByFields: {
+                    name: string;
+                    order: 'desc' | 'asc';
+                  }[] = [{ name: 'qty', order: 'desc' }];
+                  const limitParam = 10;
+                  const startAtParam = 9;
+
+                  const queryParams = {
+                    limit: limitParam,
+                    startAt: startAt(startAtParam),
+                    // Uncomment and modify the following lines as needed:
+                    // startAfter: [startAfterParam],
+                    // endAt: [endAtParam],
+                    // endBefore: [endBeforeParam],
+                  };
+
+                  const query = createQuery({
+                    collectionRef: collection(db, 'posts'),
+                    compositeFilterConstraint,
+                    orderByFields,
+                    ...queryParams,
+                  });
+                  const docsData = await getDocsData({
+                    query,
+                    isFromCache: false,
+                  });
+                  setQueryDocsData(docsData);
+                } catch (err) {
+                  setError((err as Error).message);
+                } finally {
+                  setLoading(false);
+                }
+              }}
+            >
+              Test Multiple Conditions Query
+            </button>
+            {queryDocsData && (
+              <pre
+                className='text-green-500'
+                data-testid='multiple-conditions-result'
+              >
+                {JSON.stringify(queryDocsData as object, null, 2)}
+              </pre>
+            )}
           </div>
         </div>
       </div>
